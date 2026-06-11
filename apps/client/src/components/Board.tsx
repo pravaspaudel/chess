@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Chessboard } from "react-chessboard";
 import type {
   ChessboardOptions,
@@ -8,28 +9,49 @@ import type { Square } from "@repo/chess-utils";
 import { useRef, useState } from "react";
 import { Game } from "@repo/chess-utils";
 import ShowMovesTable from "./ShowMovesTable";
+import useChessStore from "../store/chess";
 
 const Board = () => {
   const gameRef = useRef(Game());
 
-  const [position, setPosition] = useState(() => gameRef.current.fen());
+  // const [position, setPosition] = useState(() => gameRef.current.fen());
+
+  const fen = useChessStore((state) => state.fen);
+
+  useEffect(() => {
+    if (fen) {
+      gameRef.current.load(fen);
+    }
+  }, [fen]);
+
+  const position = fen ?? gameRef.current.fen();
+
+  const turn = useChessStore((state) => state.turn);
+  const makeMove = useChessStore((state) => state.movepiece);
+  const color = useChessStore((state) => state.color);
+  const gameId = useChessStore((state) => state.gameId);
+  const pgn = useChessStore((state) => state.pgn);
+
+  console.log("gameId:", gameId);
 
   const [moveFrom, setMoveFrom] = useState<Square | "">("");
   const [optionsToMove, setOptionsToMove] = useState<
     Record<string, React.CSSProperties>
   >({});
-  const [pgn, setPGN] = useState("");
 
   const onDrop = ({ sourceSquare, targetSquare }: PieceDropHandlerArgs) => {
-    if (!targetSquare) return false;
+    if (!targetSquare || !gameId) return false;
+    if (color !== turn) return false;
 
     try {
-      gameRef.current.move({
+      const move = gameRef.current.move({
         from: sourceSquare,
         to: targetSquare,
       });
 
-      setPosition(gameRef.current.fen());
+      if (!move) return false;
+
+      makeMove(move.san);
 
       return true;
     } catch (err) {
@@ -71,7 +93,10 @@ const Board = () => {
 
   const onSquareClick = ({ square, piece }: SquareHandlerArgs) => {
     //on first click what to do ??
-    if (!square) {
+
+    if (color !== turn) return;
+
+    if (!square || !gameId) {
       return;
     }
 
@@ -102,14 +127,18 @@ const Board = () => {
     }
 
     try {
-      gameRef.current.move({
-        from: moveFrom,
-        to: square,
-        promotion: "q",
-      });
+      // gameRef.current.move({
+      //   from: moveFrom,
+      //   to: square,
+      //   promotion: "q",
+      // });
 
-      setPosition(gameRef.current.fen());
-      setPGN(gameRef.current.pgn());
+      // makeMove(square);
+
+      // setPosition(gameRef.current.fen());
+      // setPGN(gameRef.current.pgn());
+
+      makeMove(foundMove.san);
 
       setMoveFrom("");
       setOptionsToMove({});
@@ -124,7 +153,7 @@ const Board = () => {
     allowDragging: false,
     allowDrawingArrows: true,
     alphaNotationStyle: { fontSize: "15px" },
-    boardOrientation: "white",
+    boardOrientation: color === "w" ? "white" : "black",
     position: position,
     onPieceDrop: onDrop,
     squareStyles: optionsToMove,

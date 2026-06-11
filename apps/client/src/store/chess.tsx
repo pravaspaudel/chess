@@ -1,0 +1,71 @@
+import { create } from "zustand";
+import useSocketStore from "./socket";
+
+type ChessStore = {
+  gameId: string | null;
+  color: "w" | "b" | null;
+  pgn: string;
+  fen: string;
+  whiteTime: number;
+  blackTime: number;
+  turn: "w" | "b";
+
+  setTurn: (turn: "w" | "b") => void;
+  setWhiteTime: (time: number) => void;
+  setBlackTime: (time: number) => void;
+  setfen: (fen: string) => void;
+  setpgn: (pgn: string) => void;
+  setColor: (color: "w" | "b") => void;
+  setGameId: (id: string) => void;
+  movepiece: (move: string) => void;
+};
+// {
+//   "type": "move",
+//   "gameId": "2734cf28-4060-4d8c-a11b-2fe5a4191b4a",
+//   "move": "Nc6"
+// }
+
+//it handles sending moves
+const useChessStore = create<ChessStore>((set, get) => ({
+  gameId: null,
+  color: "w",
+  pgn: "",
+  fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+  turn: "w",
+  whiteTime: 18000,
+  blackTime: 18000,
+
+  setTurn: (turn: "w" | "b") => set({ turn: turn }),
+  setGameId: (id) => set({ gameId: id }),
+  setColor: (color) => set({ color: color }),
+  setpgn: (pgn) => set({ pgn: pgn }),
+  setfen: (fen) => set({ fen: fen }),
+  setWhiteTime: (whiteTime) => set({ whiteTime: whiteTime }),
+  setBlackTime: (blackTime) => set({ blackTime: blackTime }),
+
+  movepiece: (move: string) => {
+    const socket = useSocketStore.getState().socket;
+
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      console.log("issue in server while making a move");
+      return;
+    }
+
+    const gameId = get().gameId;
+
+    if (!gameId) {
+      console.log("you are not in any game currently");
+      return;
+    }
+
+    socket.send(
+      JSON.stringify({
+        type: "move",
+        gameId: gameId,
+        move: move,
+      }),
+    );
+  },
+}));
+
+export default useChessStore;

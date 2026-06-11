@@ -12,8 +12,7 @@ const ShowMovesTable = ({ pgn }: MoveTableProps) => {
   const regex = /(\d+)\.\s*([^\s]+)(?:\s+([^\s]+))?/g;
 
   const rows: PgnTableRow[] = [];
-
-  let matched;
+  let matched: RegExpExecArray | null;
 
   while ((matched = regex.exec(pgn)) !== null) {
     rows.push({
@@ -27,14 +26,15 @@ const ShowMovesTable = ({ pgn }: MoveTableProps) => {
     <table>
       <thead>
         <tr>
-          <td>move number</td>
-          <td>white</td>
-          <td>black</td>
+          <th>Move</th>
+          <th>White</th>
+          <th>Black</th>
         </tr>
       </thead>
+
       <tbody>
         {rows.map((row) => (
-          <tr key={row.move}>
+          <tr>
             <td>{row.move}</td>
             <td>{row.white}</td>
             <td>{row.black}</td>
