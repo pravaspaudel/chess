@@ -3,18 +3,23 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "bun --watch src/index.ts",
-    "start": "bun run dist/index.js",
+    "dev": "bun --watch src/server.ts",
+    "start": "bun run dist/server.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@repo/chess-utils": "workspace:*",
+    "@repo/database": "workspace:*",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
-    "express": "^4.19.2",
     "dotenv": "^16.5.0",
-    "@repo/chess-utils":"workspace:*"
+    "express": "^4.19.2",
+    "winston": "^3.19.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/node": "^22.15.21",

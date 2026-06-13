@@ -22,6 +22,8 @@ function GetNumberEnv(key: string) {
   return num;
 }
 
-export const ENV = {
+export const config = {
+  NODE_ENV: GetEnv("NODE_ENV"),
   PORT: GetNumberEnv("PORT"),
+  LOG_LEVEL: GetEnv("LOG_LEVEL"),
 };
