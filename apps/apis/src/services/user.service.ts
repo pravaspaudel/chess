@@ -1,6 +1,6 @@
 import { AppError, ValidationError } from "../errors/errors";
 import { findUserByEmail, registerUser } from "../repositories/user.repository";
-import type { RegisterUserInput } from "../types/user.type";
+import type { LoginUserInput, RegisterUserInput } from "../types/user.type";
 import { hashedPassword, comparePassword } from "../utils/password";
 import logger from "../logger/logger";
 
@@ -34,4 +34,25 @@ const registerUserService = async (user: RegisterUserInput) => {
   return createdUser;
 };
 
-export { registerUserService };
+const loginUserService = async (user: LoginUserInput) => {
+  const existingUser = await findUserByEmail(user.email);
+
+  if (!existingUser) {
+    throw new AppError(400, "invalid email or password");
+  }
+
+  const isPasswordCorrect = comparePassword(
+    user.password,
+    existingUser.password,
+  );
+
+  //create token and set cookie
+
+  if (!isPasswordCorrect) {
+    throw new AppError(400, "invalid email or password");
+  }
+
+  return existingUser;
+};
+
+export { registerUserService, loginUserService };

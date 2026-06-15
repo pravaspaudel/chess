@@ -1,11 +1,12 @@
 import express from "express";
-import type { Request, Response } from "express";
 import userRouter from "./routes/user.routes";
 import errorMiddleware from "./middleware/error.middleware";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
 //middleware
+app.use(cookieParser());
 app.use(express.json());
 
 //routes
