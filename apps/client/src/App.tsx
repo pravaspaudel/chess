@@ -1,28 +1,34 @@
-import Board from "./components/Board";
 import "./App.css";
-import useSocketStore from "./store/socket";
+import { RouterProvider } from "react-router";
+import router from "./routes/route";
+import useAuthStore from "./features/auth/store/useAuthStore";
 import { useEffect } from "react";
-import StartMatch from "./components/StartMatch";
+import { getMe } from "./features/auth/api/auth.api";
 
 const App = () => {
-  const connect = useSocketStore((state) => state.connect);
-  const disconnect = useSocketStore((state) => state.disconnect);
+  const setUser = useAuthStore((state) => state.setUser);
+  const logout = useAuthStore((state) => state.logout);
+  const setIsAuthenticating = useAuthStore(
+    (state) => state.setIsAuthenticating,
+  );
 
   useEffect(() => {
-    connect();
+    const startAuth = async () => {
+      try {
+        const response = await getMe();
 
-    return () => {
-      disconnect();
+        setUser(response.data);
+      } catch {
+        logout();
+      } finally {
+        setIsAuthenticating(false);
+      }
     };
-  }, [connect, disconnect]);
 
-  return (
-    <div>
-      <h1>this is app.jsx</h1>
-      <Board />
-      <StartMatch />
-    </div>
-  );
+    startAuth();
+  }, []);
+
+  return <RouterProvider router={router} />;
 };
 
 export default App;
