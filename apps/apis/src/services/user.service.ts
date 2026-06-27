@@ -1,5 +1,9 @@
 import { AppError, ValidationError } from "../errors/errors";
-import { findUserByEmail, registerUser } from "../repositories/user.repository";
+import {
+  findUserByEmail,
+  findUserByUsername,
+  registerUser,
+} from "../repositories/user.repository";
 import type { LoginUserInput, RegisterUserInput } from "../types/user.type";
 import { hashedPassword, comparePassword } from "../utils/password";
 import logger from "../logger/logger";
@@ -13,6 +17,12 @@ const registerUserService = async (user: RegisterUserInput) => {
     });
 
     throw new ValidationError("Email already registered");
+  }
+
+  const existingUsername = await findUserByUsername(user.username);
+
+  if (existingUsername.length > 0) {
+    throw new ValidationError("username already existed");
   }
 
   const passwordHashed = await hashedPassword(user.password);

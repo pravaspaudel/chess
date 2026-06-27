@@ -39,4 +39,8 @@ const findUserById = async (id: string) => {
   return db.select().from(users).where(eq(users.id, id));
 };
 
-export { registerUser, findUserByEmail, findUserById };
+const findUserByUsername = async (username: string) => {
+  return db.select().from(users).where(eq(users.username, username)).limit(1);
+};
+
+export { registerUser, findUserByEmail, findUserById, findUserByUsername };

@@ -6,13 +6,19 @@ import type { Response, Request } from "express";
 
 export type JWTPayload = {
   id: string;
+  username: string;
+  email: string;
 };
 
 function generateToken(payload: JWTPayload) {
-  const token = jwt.sign({ id: payload.id }, config.JWT_SECRET, {
-    expiresIn: config.JWT_EXPIRY_TIME,
-    algorithm: config.JWT_ALGORITHM,
-  });
+  const token = jwt.sign(
+    { id: payload.id, username: payload.username, email: payload.email },
+    config.JWT_SECRET,
+    {
+      expiresIn: config.JWT_EXPIRY_TIME,
+      algorithm: config.JWT_ALGORITHM,
+    },
+  );
 
   return token;
 }
@@ -29,6 +35,8 @@ function verifyToken(token: string): JWTPayload {
 
     return {
       id: String(decoded.id),
+      email: decoded.email,
+      username: decoded.username,
     };
   } catch (error) {
     if (error instanceof TokenExpiredError) {

@@ -3,15 +3,18 @@ import { randomUUID } from "crypto";
 import type { InitWsMsg, MatchMaking } from "./types/game.type";
 import { GameManager } from "./game/gameManager";
 import { sendMessage } from "./utils/socket";
+import { startRedis } from "@repo/redis";
 
 const wss = new WebSocketServer({ port: 5000 });
 const gameManager = new GameManager();
 
-console.log("ig socket is running on ws://localhost:5000");
+startRedis();
+console.log("socket is running on ws://localhost:5000");
 
 wss.on("connection", (socket) => {
   //on connection send this msg
   console.log("client connected successfully");
+
   const initMsg: InitWsMsg = {
     type: "connected",
     id: randomUUID(),

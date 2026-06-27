@@ -5,6 +5,7 @@ import { Game } from "@repo/chess-utils";
 import { checkGameOver } from "@repo/chess-utils";
 import type { Chess } from "@repo/chess-utils";
 import { sendMessage } from "../utils/socket";
+import { client, saveMove } from "@repo/redis";
 
 class GameRoom {
   readonly gameId: string;
@@ -119,6 +120,20 @@ class GameRoom {
         blackTime: this.blackTime,
       });
     }
+
+    //state of game to store in redis
+    const state = {
+      gameId: this.gameId,
+      fen,
+      moves: this.game.history(),
+      turn: String(this.game.turn()) as "w" | "b",
+      whiteId: this.whitePlayerId,
+      blackId: this.blackPlayerId,
+      whiteTime: this.whiteTime,
+      blackTime: this.blackTime,
+    };
+
+    saveMove(client, state);
   }
 
   private broadcastResult(message: string, winner?: "w" | "b" | null) {

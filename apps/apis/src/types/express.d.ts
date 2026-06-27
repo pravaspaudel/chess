@@ -1,11 +1,11 @@
 import "express";
-import type { JWTPayload } from "../utils/cookie";
 import type { Request } from "express";
+import type { User } from "./user.type";
 
 declare global {
   namespace Express {
     interface Request {
-      user?: JWTPayload;
+      user?: User;
     }
   }
 }

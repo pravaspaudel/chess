@@ -10,8 +10,6 @@ import {
 } from "../services/user.service";
 import { createSuccessResponse } from "../utils/response.body";
 import { AppError, UnauthorizedError } from "../errors/errors";
-import { findUserByEmail } from "../repositories/user.repository";
-import { comparePassword } from "../utils/password";
 import { createCookie, generateToken } from "../utils/cookie";
 
 const registerUserController = async (
@@ -38,7 +36,11 @@ const loginUserController = async (
   const user = await loginUserService(parsed);
 
   //create token and set cookie
-  const token = generateToken({ id: user.id });
+  const token = generateToken({
+    id: user.id,
+    username: user.username,
+    email: user.email,
+  });
   createCookie(res, "token", token);
 
   return res.status(201).json(
@@ -61,8 +63,10 @@ const meController = async (
     throw new UnauthorizedError("you are unauthorized");
   }
   return res.status(200).json(
-    createSuccessResponse(200, "you are authorized", {
-      user_id: user.id,
+    createSuccessResponse(200, "you are authorized hehe", {
+      id: user.id,
+      email: user.email,
+      username: user.username,
     }),
   );
 };
