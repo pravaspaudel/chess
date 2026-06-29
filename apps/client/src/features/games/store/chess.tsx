@@ -13,7 +13,7 @@ type ChessStore = {
   setTurn: (turn: "w" | "b") => void;
   setWhiteTime: (time: number) => void;
   setBlackTime: (time: number) => void;
-  setfen: (fen: string) => void;
+  setFen: (fen: string) => void;
   setpgn: (pgn: string) => void;
   setColor: (color: "w" | "b") => void;
   setGameId: (id: string) => void;
@@ -39,7 +39,7 @@ const useChessStore = create<ChessStore>((set, get) => ({
   setGameId: (id) => set({ gameId: id }),
   setColor: (color) => set({ color: color }),
   setpgn: (pgn) => set({ pgn: pgn }),
-  setfen: (fen) => set({ fen: fen }),
+  setFen: (fen) => set({ fen: fen }),
   setWhiteTime: (whiteTime) => set({ whiteTime: whiteTime }),
   setBlackTime: (blackTime) => set({ blackTime: blackTime }),
 

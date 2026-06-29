@@ -15,8 +15,9 @@ const Board = () => {
   const gameRef = useRef(Game());
 
   // const [position, setPosition] = useState(() => gameRef.current.fen());
-
   const fen = useChessStore((state) => state.fen);
+
+  console.log("this is fen from board.tsx", fen);
 
   useEffect(() => {
     if (fen) {
@@ -24,7 +25,7 @@ const Board = () => {
     }
   }, [fen]);
 
-  const position = fen ?? gameRef.current.fen();
+  const position = fen;
 
   const turn = useChessStore((state) => state.turn);
   const makeMove = useChessStore((state) => state.movepiece);
@@ -33,11 +34,22 @@ const Board = () => {
   const pgn = useChessStore((state) => state.pgn);
 
   console.log("gameId:", gameId);
+  console.log("color on Board.tsx", color);
+
+  console.log("board.tsx logs", gameId, color, fen, turn);
 
   const [moveFrom, setMoveFrom] = useState<Square | "">("");
   const [optionsToMove, setOptionsToMove] = useState<
     Record<string, React.CSSProperties>
   >({});
+
+  useEffect(() => {
+    console.log("BOARD FEN CHANGED", fen);
+  }, [fen]);
+
+  useEffect(() => {
+    console.log("BOARD COLOR CHANGED", color);
+  }, [color]);
 
   const onDrop = ({ sourceSquare, targetSquare }: PieceDropHandlerArgs) => {
     if (!targetSquare || !gameId) return false;

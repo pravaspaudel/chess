@@ -1,9 +1,15 @@
 import { create } from "zustand";
 import useChessStore from "./chess";
+import { useAuthStore } from "@/features/auth";
+
+type status = {
+  type: "waiting" | "match_found";
+  message: string;
+};
 
 type SocketStore = {
   socket: WebSocket | null;
-  message: string | null;
+  status: status | null;
 
   connect: () => void;
   disconnect: () => void;
@@ -12,7 +18,7 @@ type SocketStore = {
 
 const useSocketStore = create<SocketStore>((set, get) => ({
   socket: null,
-  message: null,
+  status: null,
   connect: () => {
     const existingWs = get().socket;
 
@@ -32,7 +38,12 @@ const useSocketStore = create<SocketStore>((set, get) => ({
 
       //connected to the game
       if (type == "waiting") {
-        set({ message: message });
+        set({
+          status: {
+            type,
+            message,
+          },
+        });
       }
 
       if (type == "match_found") {
@@ -40,12 +51,19 @@ const useSocketStore = create<SocketStore>((set, get) => ({
 
         useChessStore.getState().setGameId(gameId);
         useChessStore.getState().setColor(color);
+
+        set({
+          status: {
+            type,
+            message: "found the match enjoy your game",
+          },
+        });
       }
 
       if (type == "move") {
         const { fen, turn, whiteTime, blackTime } = JSON.parse(event.data);
 
-        useChessStore.getState().setfen(fen);
+        useChessStore.getState().setFen(fen);
         useChessStore.getState().setWhiteTime(whiteTime);
         useChessStore.getState().setBlackTime(blackTime);
         useChessStore.getState().setTurn(turn);
@@ -68,14 +86,17 @@ const useSocketStore = create<SocketStore>((set, get) => ({
 
   matchRequest: () => {
     const socket = get().socket;
+    console.log("socket instance is ", socket);
 
     if (!socket || socket.readyState != WebSocket.OPEN) {
+      console.log("matchRequest got bursted");
       console.log("internal server error");
     }
 
     socket?.send(
       JSON.stringify({
         type: "find_match",
+        userId: useAuthStore.getState().user?.id,
         matchtime: "3",
       }),
     );

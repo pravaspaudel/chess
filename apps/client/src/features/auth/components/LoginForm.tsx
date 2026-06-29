@@ -46,7 +46,7 @@ const LoginForm = () => {
 
       setUser(response);
 
-      navigate("/profile");
+      navigate("/play");
     } catch (error) {
       console.log(error);
 
