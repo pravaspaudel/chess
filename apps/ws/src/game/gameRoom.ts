@@ -1,17 +1,17 @@
 // one gameRoom has 2 players with their id maps to socket
 import type WebSocket from "ws";
-import type { MatchTime, WaitingPlayer } from "../types/game.type";
+import type { MatchTime, RoomPlayer, WaitingPlayer } from "../types/game.type";
 import { Game } from "@repo/chess-utils";
 import { checkGameOver } from "@repo/chess-utils";
 import type { Chess } from "@repo/chess-utils";
 import { sendMessage } from "../utils/socket";
-import { client, saveMove } from "@repo/redis";
+import { client, saveGameToRedis, saveGameToDB } from "@repo/redis";
 
 class GameRoom {
   readonly gameId: string;
 
-  private whitePlayerId: string;
-  private blackPlayerId: string;
+  private whitePlayer: RoomPlayer;
+  private blackPlayer: RoomPlayer;
 
   //only 2 options for now 3 or 3|2
   private whiteTime: number;
@@ -20,7 +20,9 @@ class GameRoom {
   private lastMoveTime = Date.now();
 
   //mapping playerId with the socket
-  players: Map<string, WebSocket> = new Map();
+  // players: Map<string, RoomPlayer> = new Map();
+  //only 2 player exists in room at one time
+  player: RoomPlayer[] = [];
 
   private isIncrement: boolean = false;
   private isGameOver = false;
@@ -31,15 +33,20 @@ class GameRoom {
     whitePlayer: WaitingPlayer,
     blackPlayer: WaitingPlayer,
     time: MatchTime,
-    private onGameOver: (gameId: string, players: string[]) => void,
+    private onGameOver: (gameId: string, players: RoomPlayer[]) => void,
   ) {
     this.gameId = gameId;
 
-    this.whitePlayerId = whitePlayer.playerId;
-    this.blackPlayerId = blackPlayer.playerId;
+    this.whitePlayer = whitePlayer;
+    this.blackPlayer = blackPlayer;
 
-    this.players.set(whitePlayer.playerId, whitePlayer.socket);
-    this.players.set(blackPlayer.playerId, blackPlayer.socket);
+    // this.whitePlayerId = whitePlayer.playerId;
+    // this.blackPlayerId = blackPlayer.playerId;
+    // this.players.set(whitePlayer);
+
+    // this.players.set(whitePlayer.playerId, whitePlayer.socket);
+    // this.players.set(blackPlayer.playerId, blackPlayer.socket);
+    this.player = [this.whitePlayer, this.blackPlayer];
 
     this.game = Game();
 
@@ -53,34 +60,45 @@ class GameRoom {
     }
   }
 
-  handleMove(playerId: string, move: string) {
+  private getPlayerBySocketId(socketId: string): RoomPlayer | undefined {
+    return this.player.find((p) => socketId == p.socketId);
+  }
+
+  async handleMove(socketId: string, move: string) {
+    const player = this.getPlayerBySocketId(socketId);
+
+    if (!player) {
+      console.log("handlemove error no player found :  ", player);
+      return;
+    }
+
     const currentTurn = this.game.turn();
 
     //cannot further move if game is over
     if (this.isGameOver) {
-      return this.sendError(playerId, "GAME_OVER", "Game already finished");
-    }
-
-    if (!this.isPlayerinRoom(playerId)) {
       return this.sendError(
-        playerId,
-        "UNAUTHORIZED",
-        "You are not in the game",
+        player.socketId,
+        "GAME_OVER",
+        "Game already finished",
       );
     }
 
-    if (currentTurn == "w" && playerId != this.whitePlayerId) {
-      return this.sendError(playerId, "NOT_YOUR_TURN", "It's not your turn");
+    if (currentTurn == "w" && player.userId != this.whitePlayer.userId) {
+      return this.sendError(socketId, "NOT_YOUR_TURN", "It's not your turn");
     }
 
-    if (currentTurn == "b" && playerId != this.blackPlayerId) {
-      return this.sendError(playerId, "NOT_YOUR_TURN", "It's not your turn");
+    if (currentTurn == "b" && player.userId != this.blackPlayer.userId) {
+      return this.sendError(socketId, "NOT_YOUR_TURN", "It's not your turn");
     }
 
     try {
       this.game.move(move);
     } catch (err) {
-      return this.sendError(playerId, "INVALID_MOVE", "Invalid chess move");
+      return this.sendError(
+        player.socketId,
+        "INVALID_MOVE",
+        "Invalid chess move",
+      );
     }
 
     //need to broadcasttime with move
@@ -98,7 +116,13 @@ class GameRoom {
       this.isGameOver = true;
       this.broadcastResult(status.message);
 
-      this.onGameOver(this.gameId, this.getPlayers());
+      try {
+        await saveGameToDB(this.gameId);
+
+        this.onGameOver(this.gameId, this.getPlayers());
+      } catch (err) {
+        console.error("Failed to persist finished game:", err);
+      }
 
       return;
     }
@@ -109,8 +133,8 @@ class GameRoom {
   private broadcastMove(move: string) {
     const fen = this.game.fen();
 
-    for (const [_, socket] of this.players) {
-      sendMessage(socket, {
+    for (const player of this.player) {
+      sendMessage(player.socket, {
         type: "move",
         move: move,
         fen,
@@ -127,13 +151,18 @@ class GameRoom {
       fen,
       moves: this.game.history(),
       turn: String(this.game.turn()) as "w" | "b",
-      whiteId: this.whitePlayerId,
-      blackId: this.blackPlayerId,
+      whiteId: this.whitePlayer.userId,
+      blackId: this.blackPlayer.userId,
       whiteTime: this.whiteTime,
       blackTime: this.blackTime,
+      // status: "ongoing",
+      status: "ongoing" as const,
+      winner: null,
     };
 
-    saveMove(client, state);
+    saveGameToRedis(client, state).catch((err) => {
+      console.log("redis save failed: ", err);
+    });
   }
 
   private broadcastResult(message: string, winner?: "w" | "b" | null) {
@@ -150,8 +179,8 @@ class GameRoom {
 
     const fen = this.game.fen();
 
-    for (const [_, socket] of this.players) {
-      sendMessage(socket, {
+    for (const player of this.player) {
+      sendMessage(player.socket, {
         type: "game_over",
         winner: finalWinner,
         message,
@@ -160,14 +189,14 @@ class GameRoom {
     }
   }
 
-  private sendError(playerId: string, code: string, message: string) {
-    const socket = this.players.get(playerId);
+  private sendError(socketId: string, code: string, message: string) {
+    const playerSocket = this.getPlayerBySocketId(socketId);
 
-    if (!socket) {
+    if (!playerSocket) {
       return;
     }
 
-    socket.send(
+    playerSocket.socket.send(
       JSON.stringify({
         type: "error",
         code,
@@ -176,25 +205,31 @@ class GameRoom {
     );
   }
 
-  private isPlayerinRoom(playerId: string): boolean {
-    return this.players.has(playerId);
+  private isPlayerInRoom(socketId: string): boolean {
+    return this.player.some((p) => p.socketId == socketId);
   }
 
-  getPlayers() {
-    return Array.from(this.players.keys());
+  getPlayers(): RoomPlayer[] {
+    return this.player;
   }
 
-  handlePlayerDisconnect(disconnectedPlayerId: string) {
+  handlePlayerDisconnect(socketId: string) {
+    const player = this.getPlayerBySocketId(socketId);
+
+    if (!player) {
+      return;
+    }
+
     if (this.isGameOver) {
       return;
     }
 
     this.isGameOver = true;
 
-    const winner = disconnectedPlayerId === this.whitePlayerId ? "b" : "w";
+    const winner = player.userId === this.whitePlayer.userId ? "b" : "w";
 
-    for (const [playerId, socket] of this.players) {
-      sendMessage(socket, {
+    for (const player of this.player) {
+      sendMessage(player.socket, {
         type: "game_over",
         winner,
         message: "Opponent disconnected",

@@ -21,7 +21,8 @@ export type MatchMaking = {
 };
 
 export type WaitingPlayer = {
-  playerId: string;
+  userId: string;
+  socketId: string;
   socket: WebSocket;
 };
 
@@ -29,4 +30,10 @@ export type MoveMessage = {
   type: "move";
   gameId: string;
   move: string;
+};
+
+export type RoomPlayer = {
+  userId: string;
+  socketId: string;
+  socket: WebSocket;
 };

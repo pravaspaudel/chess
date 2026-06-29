@@ -5,6 +5,7 @@ import type {
   WaitingPlayer,
   MoveMessage,
   MatchTime,
+  RoomPlayer,
 } from "../types/game.type";
 import type WebSocket from "ws";
 import { sendMessage } from "../utils/socket";
@@ -15,9 +16,10 @@ export class GameManager {
   games: Map<string, GameRoom> = new Map();
 
   //playerToGame: Map<playerId,gameId>
-  playerToGame: Map<string, string> = new Map();
+  // playerToGame: Map<string, string> = new Map();
 
-  //todo: different queue for player with different match time request;
+  userToGame: Map<string, string> = new Map();
+  socketToGame: Map<string, string> = new Map();
 
   private waitingPlayer: (WaitingPlayer & { matchTime: MatchTime }) | null =
     null;
@@ -25,20 +27,26 @@ export class GameManager {
 
   handleIncomingMessage(
     message: MatchMaking | MoveMessage,
-    playerId: string,
+    userId: string,
     socket: WebSocket,
+    socketId: string,
   ) {
     switch (message.type) {
       case "find_match":
-        this.addPlayer(playerId, socket, message.matchtime);
+        this.addPlayer(userId, socketId, socket, message.matchtime);
         break;
       case "move":
-        this.handleMove(message, playerId, socket);
+        this.handleMove(message, socketId, socket);
     }
   }
 
-  private addPlayer(id: string, socket: WebSocket, matchTime: MatchTime) {
-    if (this.playerToGame.has(id)) {
+  private addPlayer(
+    userId: string,
+    socketId: string,
+    socket: WebSocket,
+    matchTime: MatchTime,
+  ) {
+    if (this.userToGame.has(userId)) {
       return sendMessage(socket, {
         type: "error",
         code: "ALREADY_IN_GAME",
@@ -48,8 +56,9 @@ export class GameManager {
 
     if (!this.waitingPlayer) {
       this.waitingPlayer = {
-        playerId: id,
-        socket: socket,
+        userId,
+        socketId,
+        socket,
         matchTime,
       };
 
@@ -67,8 +76,9 @@ export class GameManager {
     }
 
     const me: WaitingPlayer = {
-      playerId: id,
-      socket: socket,
+      userId,
+      socketId,
+      socket,
     };
 
     this.createGame(me, this.waitingPlayer, matchTime);
@@ -137,18 +147,25 @@ export class GameManager {
     }
     this.games.set(gameId, room);
 
-    this.playerToGame.set(player1.playerId, gameId);
-    this.playerToGame.set(player2.playerId, gameId);
+    this.socketToGame.set(player1.socketId, gameId);
+    this.socketToGame.set(player2.socketId, gameId);
+
+    this.userToGame.set(player1.userId, gameId);
+    this.userToGame.set(player2.userId, gameId);
   }
 
   private handleMove(
     message: MoveMessage,
-    playerId: string,
+    socketId: string,
     socket: WebSocket,
   ) {
     const room = this.games.get(message.gameId);
 
+    console.log("room is existing right now");
+
     if (!room) {
+      console.log("room doesn't exists sorry");
+
       return sendMessage(socket, {
         type: "error",
         code: "GAME_NOT_FOUND",
@@ -156,15 +173,15 @@ export class GameManager {
       });
     }
 
-    room.handleMove(playerId, message.move);
+    room.handleMove(socketId, message.move);
   }
 
-  handleDisconnect(playerId: string) {
-    if (this.waitingPlayer && this.waitingPlayer.playerId == playerId) {
+  handleDisconnect(socketId: string) {
+    if (this.waitingPlayer && this.waitingPlayer.socketId == socketId) {
       this.waitingPlayer = null;
     }
 
-    const gameId = this.playerToGame.get(playerId);
+    const gameId = this.socketToGame.get(socketId);
 
     if (!gameId) {
       return;
@@ -173,24 +190,27 @@ export class GameManager {
     const room = this.games.get(gameId);
 
     if (!room) {
-      this.playerToGame.delete(playerId);
+      // this.playerToGame.delete(playerId);
+      this.socketToGame.delete(socketId);
       return;
     }
 
-    room.handlePlayerDisconnect(playerId);
+    room.handlePlayerDisconnect(socketId);
 
     const players = room.getPlayers();
 
-    for (const id of players) {
-      this.playerToGame.delete(id);
+    for (const player of players) {
+      this.socketToGame.delete(player.socketId);
+      this.userToGame.delete(player.userId);
     }
 
     this.games.delete(gameId);
   }
 
-  private cleanupGame(gameId: string, players: string[]) {
-    for (const playerId of players) {
-      this.playerToGame.delete(playerId);
+  private cleanupGame(gameId: string, players: RoomPlayer[]) {
+    for (const player of players) {
+      this.socketToGame.delete(player.socketId);
+      this.userToGame.delete(player.userId);
     }
 
     this.games.delete(gameId);
