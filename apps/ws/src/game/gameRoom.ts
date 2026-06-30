@@ -17,6 +17,9 @@ class GameRoom {
   private whiteTime: number;
   private blackTime: number;
 
+  private whiteTimeHistory: number[] = [];
+  private blackTimeHistory: number[] = [];
+
   private lastMoveTime = Date.now();
 
   //mapping playerId with the socket
@@ -117,7 +120,11 @@ class GameRoom {
       this.broadcastResult(status.message);
 
       try {
-        await saveGameToDB(this.gameId);
+        await saveGameToDB(
+          this.gameId,
+          this.whiteTimeHistory,
+          this.blackTimeHistory,
+        );
 
         this.onGameOver(this.gameId, this.getPlayers());
       } catch (err) {
@@ -249,12 +256,16 @@ class GameRoom {
       if (this.isIncrement) {
         this.whiteTime += 2000;
       }
+
+      this.whiteTimeHistory.push(this.whiteTime);
     } else {
       this.blackTime -= diff;
 
       if (this.isIncrement) {
         this.blackTime += 2000;
       }
+
+      this.blackTimeHistory.push(this.blackTime);
     }
 
     if (this.whiteTime <= 0 || this.blackTime <= 0) {

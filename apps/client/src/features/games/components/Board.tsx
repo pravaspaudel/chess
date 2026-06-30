@@ -10,6 +10,7 @@ import { useRef, useState } from "react";
 import { Game } from "@repo/chess-utils";
 import ShowMovesTable from "./ShowMovesTable";
 import useChessStore from "../store/chess";
+import ShowClock from "./ShowClock";
 
 const Board = () => {
   const gameRef = useRef(Game());
@@ -176,6 +177,7 @@ const Board = () => {
     <div className="w-[400px]">
       <Chessboard options={chessOptions} />
       <ShowMovesTable pgn={pgn} />
+      <ShowClock />
     </div>
   );
 };

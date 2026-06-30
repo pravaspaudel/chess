@@ -1,5 +1,8 @@
 import { createClient } from "redis";
-import { saveMove, getMove } from "./utils/handleMoveStatus";
+import { getMoves } from "./utils/handleMoveStatus";
+import { saveGameToRedis } from "./utils/handleMoveStatus";
+import { saveGameToDB } from "./utils/saveGame";
+// import type { RedisClientType } from "redis";
 
 //default
 const client = createClient({
@@ -17,4 +20,5 @@ const startRedis = async () => {
 };
 
 export { client, startRedis };
-export { saveMove, getMove };
+export { getMoves };
+export { saveGameToDB, saveGameToRedis };
