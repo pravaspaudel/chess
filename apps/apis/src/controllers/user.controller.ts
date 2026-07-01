@@ -1,74 +1,54 @@
 import type { NextFunction, Request, Response } from "express";
-import {
-  loginUserSchema,
-  registerUserSchema,
-} from "../validation/user.validator";
-import logger from "../logger/logger";
-import {
-  loginUserService,
-  registerUserService,
-} from "../services/user.service";
+import asyncHandler from "../utils/asyncHandler";
+import { AppError } from "../errors/errors";
 import { createSuccessResponse } from "../utils/response.body";
-import { AppError, UnauthorizedError } from "../errors/errors";
-import { createCookie, generateToken } from "../utils/cookie";
+import {
+  getUserByIdService,
+  searchUsernameService,
+} from "../services/user.service";
 
-const registerUserController = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  const parsed = registerUserSchema.parse(req.body);
+// /users?username=
+const getUserByUsernameController = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const params = req.query;
 
-  const registered = await registerUserService(parsed);
+    if (!params) {
+      throw new AppError(400, "invalid request");
+    }
 
-  return res
-    .status(201)
-    .json(createSuccessResponse(201, "user created successfully", registered));
-};
+    const username = params.username;
 
-const loginUserController = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  const parsed = loginUserSchema.parse(req.body);
+    console.log("username is", username);
 
-  const user = await loginUserService(parsed);
+    if (!username) {
+      throw new AppError(400, "invalid request");
+    }
 
-  //create token and set cookie
-  const token = generateToken({
-    id: user.id,
-    username: user.username,
-    email: user.email,
-  });
-  createCookie(res, "token", token);
+    const users = await searchUsernameService(username as string);
 
-  return res.status(201).json(
-    createSuccessResponse(201, "user logged in successfully", {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-    }),
-  );
-};
+    return res.json(
+      createSuccessResponse(200, "got users with searched username", users),
+    );
+  },
+);
 
-const meController = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  const user = req.user;
+//get user by its id
+const getUserByUserIdController = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
 
-  if (!user) {
-    throw new UnauthorizedError("you are unauthorized");
-  }
-  return res.status(200).json(
-    createSuccessResponse(200, "you are authorized hehe", {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-    }),
-  );
-};
+    console.log(`user id is ${userId} , type is ${typeof userId}`);
 
-export { registerUserController, loginUserController, meController };
+    if (!userId || typeof userId !== "string") {
+      throw new AppError(400, "invalid request");
+    }
+
+    console.log("userid was ", userId);
+
+    const user = await getUserByIdService(userId);
+
+    return res.json(createSuccessResponse(200, "got user by it's id", user));
+  },
+);
+
+export { getUserByUsernameController, getUserByUserIdController };

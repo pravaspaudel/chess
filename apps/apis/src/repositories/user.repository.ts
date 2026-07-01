@@ -1,4 +1,4 @@
-import { db, users, eq } from "@repo/database";
+import { db, users, eq, ilike } from "@repo/database";
 import logger from "../logger/logger";
 import type { RegisterUserInput } from "../types/user.type";
 
@@ -36,11 +36,49 @@ const findUserByEmail = async (email: string) => {
 };
 
 const findUserById = async (id: string) => {
-  return db.select().from(users).where(eq(users.id, id));
+  try {
+    const user = await db.select().from(users).where(eq(users.id, id));
+
+    return user[0] ?? null;
+  } catch (error) {
+    logger.error("Failed to fetch user by id", {
+      error,
+    });
+
+    throw error;
+  }
 };
 
 const findUserByUsername = async (username: string) => {
-  return db.select().from(users).where(eq(users.username, username)).limit(1);
+  try {
+    return await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username))
+      .limit(1);
+  } catch (error) {
+    logger.error("Failed to fetch user by username", { error });
+    throw error;
+  }
 };
 
-export { registerUser, findUserByEmail, findUserById, findUserByUsername };
+const searchUsername = async (username: string) => {
+  // return await db.select().from(users).where(likes);
+  try {
+    return await db
+      .select()
+      .from(users)
+      .where(ilike(users.username, `%${username}%`));
+  } catch (error) {
+    logger.error("failed searching user", { error });
+    throw error;
+  }
+};
+
+export {
+  registerUser,
+  findUserByEmail,
+  findUserById,
+  findUserByUsername,
+  searchUsername,
+};

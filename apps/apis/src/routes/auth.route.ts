@@ -3,7 +3,7 @@ import {
   loginUserController,
   meController,
   registerUserController,
-} from "../controllers/user.controller";
+} from "../controllers/auth.controller";
 import asyncHandler from "../utils/asyncHandler";
 import protectedRoute from "../middleware/protected.middleware";
 

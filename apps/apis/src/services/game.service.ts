@@ -7,11 +7,7 @@ const getGameByIdService = async (gameId: string) => {
     throw new Error("no game exists in redis");
   }
 
-  game = JSON.parse(game);
-
-  if (!game) {
-    throw new Error("error in parsing ");
-  }
+  console.log("getgameByIdService : ", game);
 
   return game;
 };
