@@ -37,7 +37,15 @@ const findUserByEmail = async (email: string) => {
 
 const findUserById = async (id: string) => {
   try {
-    const user = await db.select().from(users).where(eq(users.id, id));
+    const user = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(eq(users.id, id));
 
     return user[0] ?? null;
   } catch (error) {
@@ -66,7 +74,11 @@ const searchUsername = async (username: string) => {
   // return await db.select().from(users).where(likes);
   try {
     return await db
-      .select()
+      .select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+      })
       .from(users)
       .where(ilike(users.username, `%${username}%`));
   } catch (error) {

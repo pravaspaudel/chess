@@ -174,10 +174,15 @@ const Board = () => {
   };
 
   return (
-    <div className="w-[400px]">
-      <Chessboard options={chessOptions} />
-      <ShowMovesTable pgn={pgn} />
-      <ShowClock />
+    <div className="flex gap-6 items-start">
+      <div className="w-[500px]">
+        <Chessboard options={chessOptions} />
+      </div>
+
+      <div className="w-[300px] flex flex-col gap-4">
+        <ShowClock />
+        <ShowMovesTable pgn={pgn} />
+      </div>
     </div>
   );
 };

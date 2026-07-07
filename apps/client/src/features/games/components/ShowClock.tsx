@@ -6,44 +6,41 @@ function formatTime(milliseconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
 
-  return (
-    <span>
-      {minutes}:{seconds.toString().padStart(2, "0")}
-    </span>
-  );
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
 export default function ShowClock() {
+  const turn = useChessStore((state) => state.turn);
   const whiteTime = useChessStore((state) => state.whiteTime);
   const blackTime = useChessStore((state) => state.blackTime);
-  const turn = useChessStore((state) => state.turn);
-  const turnStartedAt = useChessStore((state) => state.turn);
+  const turnStartedAt = useChessStore((state) => state.turnStartedAt);
 
-  const [now, setNow] = useState(new Date.now());
+  console.log({
+    whiteTime: whiteTime,
+    blackTime: blackTime,
+  });
+
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const timer = setInterval(() => {
       setNow(Date.now());
     }, 100);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, []);
 
-  const elapsed = now - turnStartedAt;
+  const elapsed = turnStartedAt > 0 ? now - turnStartedAt : 0;
 
-  const displayWhiteTime =
-    turn === "white" ? Math.max(0, whiteTime - elapsed) : whiteTime;
+  const whiteDisplay = turn === "w" ? whiteTime - elapsed : whiteTime;
 
-  const displayBlackTime =
-    turn === "black" ? Math.max(0, blackTime - elapsed) : blackTime;
+  const blackDisplay = turn === "b" ? blackTime - elapsed : blackTime;
 
   return (
     <div>
-      <h1>this is the clock baby</h1>
+      <div>White: {formatTime(Math.max(0, whiteDisplay))}</div>
 
-      <span>whiteTime: {formatTime(displayWhiteTime)}</span>
-
-      <span>blackTime: {formatTime(displayBlackTime)}</span>
+      <div>Black: {formatTime(Math.max(0, blackDisplay))}</div>
     </div>
   );
 }

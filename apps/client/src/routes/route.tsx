@@ -6,6 +6,8 @@ import ProtectedRoute from "@/shared/components/ProtectedRoute";
 import ChessPage from "@/features/games/pages/ChessPage";
 import Playpaget from "@/features/games/pages/Playpaget";
 import HomePage from "@/features/landing/pages/HomePage";
+import SocialPage from "@/features/social/pages/SocialPage";
+import UserPage from "@/features/social/pages/UserPage";
 
 const router = createBrowserRouter([
   {
@@ -35,6 +37,14 @@ const router = createBrowserRouter([
   {
     path: "/play/:gameId",
     element: <ChessPage />,
+  },
+  {
+    path: "/social",
+    element: <SocialPage />,
+  },
+  {
+    path: "/social/users/:userId",
+    element: <UserPage />,
   },
 ]);
 

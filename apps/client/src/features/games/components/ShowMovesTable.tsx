@@ -9,35 +9,34 @@ type PgnTableRow = {
 };
 
 const ShowMovesTable = ({ pgn }: MoveTableProps) => {
-  const regex = /(\d+)\.\s*([^\s]+)(?:\s+([^\s]+))?/g;
+  const moves = pgn.trim().split(/\s+/);
 
   const rows: PgnTableRow[] = [];
-  let matched: RegExpExecArray | null;
 
-  while ((matched = regex.exec(pgn)) !== null) {
+  for (let i = 0; i < moves.length; i += 2) {
     rows.push({
-      move: Number(matched[1]),
-      white: matched[2],
-      black: matched[3] && matched[3] !== "*" ? matched[3] : "",
+      move: Math.floor(i / 2) + 1,
+      white: moves[i] ?? "",
+      black: moves[i + 1] ?? "",
     });
   }
 
   return (
-    <table>
+    <table className="w-full border-collapse border mt-4">
       <thead>
         <tr>
-          <th>Move</th>
-          <th>White</th>
-          <th>Black</th>
+          <th className="border p-2">#</th>
+          <th className="border p-2">White</th>
+          <th className="border p-2">Black</th>
         </tr>
       </thead>
 
       <tbody>
         {rows.map((row) => (
-          <tr>
-            <td>{row.move}</td>
-            <td>{row.white}</td>
-            <td>{row.black}</td>
+          <tr key={row.move}>
+            <td className="border p-2">{row.move}</td>
+            <td className="border p-2">{row.white}</td>
+            <td className="border p-2">{row.black}</td>
           </tr>
         ))}
       </tbody>

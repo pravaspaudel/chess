@@ -7,7 +7,9 @@ import {
 
 const userRouter = Router();
 
+// /users?username=
 userRouter.get("/users", protectedRoute, getUserByUsernameController);
+
 userRouter.get("/users/:userId", protectedRoute, getUserByUserIdController);
 
 export default userRouter;
