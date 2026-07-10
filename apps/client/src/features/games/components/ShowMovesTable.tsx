@@ -9,7 +9,12 @@ type PgnTableRow = {
 };
 
 const ShowMovesTable = ({ pgn }: MoveTableProps) => {
-  const moves = pgn.trim().split(/\s+/);
+  const moves = pgn
+    .replace(/\[.*?\]\n?/g, "") // remove PGN headers
+    .replace(/\*/g, "") // remove game result placeholder
+    .trim()
+    .split(/\s+/)
+    .filter((token) => !/^\d+\.$/.test(token));
 
   const rows: PgnTableRow[] = [];
 

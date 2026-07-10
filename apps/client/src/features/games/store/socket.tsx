@@ -33,7 +33,7 @@ const useSocketStore = create<SocketStore>((set, get) => ({
     };
 
     ws.onmessage = (event) => {
-      console.log("received", JSON.parse(event.data));
+      console.log("received on socket (socket.tsx): ", JSON.parse(event.data));
       const { type, message } = JSON.parse(event.data);
 
       //connected to the game
@@ -49,6 +49,8 @@ const useSocketStore = create<SocketStore>((set, get) => ({
       if (type == "match_found") {
         const { color, gameId } = JSON.parse(event.data);
 
+        useChessStore.getState().resetGame();
+
         useChessStore.getState().setGameId(gameId);
         useChessStore.getState().setColor(color);
 
@@ -61,12 +63,24 @@ const useSocketStore = create<SocketStore>((set, get) => ({
       }
 
       if (type == "move") {
-        const { fen, turn, whiteTime, blackTime } = JSON.parse(event.data);
+        const { fen, turn, whiteTime, blackTime, serverTime, pgn } = JSON.parse(
+          event.data,
+        );
 
         useChessStore.getState().setFen(fen);
         useChessStore.getState().setWhiteTime(whiteTime);
         useChessStore.getState().setBlackTime(blackTime);
         useChessStore.getState().setTurn(turn);
+        useChessStore.getState().setServerTime(serverTime);
+        useChessStore.getState().setpgn(pgn);
+      }
+
+      //handling over of the game
+      if (type == "game_over") {
+        const { fen, winner } = JSON.parse(event.data);
+
+        useChessStore.getState().setFen(fen);
+        useChessStore.getState().setGameOver(winner);
       }
     };
 
@@ -86,7 +100,6 @@ const useSocketStore = create<SocketStore>((set, get) => ({
 
   matchRequest: () => {
     const socket = get().socket;
-    console.log("socket instance is ", socket);
 
     if (!socket || socket.readyState != WebSocket.OPEN) {
       console.log("matchRequest got bursted");

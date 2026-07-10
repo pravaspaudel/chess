@@ -11,14 +11,13 @@ import { Game } from "@repo/chess-utils";
 import ShowMovesTable from "./ShowMovesTable";
 import useChessStore from "../store/chess";
 import ShowClock from "./ShowClock";
+import GameOverModel from "./GameOverModel";
 
 const Board = () => {
   const gameRef = useRef(Game());
 
   // const [position, setPosition] = useState(() => gameRef.current.fen());
   const fen = useChessStore((state) => state.fen);
-
-  console.log("this is fen from board.tsx", fen);
 
   useEffect(() => {
     if (fen) {
@@ -34,23 +33,23 @@ const Board = () => {
   const gameId = useChessStore((state) => state.gameId);
   const pgn = useChessStore((state) => state.pgn);
 
-  console.log("gameId:", gameId);
-  console.log("color on Board.tsx", color);
+  // console.log("gameId:", gameId);
+  // console.log("color on Board.tsx", color);
 
-  console.log("board.tsx logs", gameId, color, fen, turn);
+  // console.log("board.tsx logs", gameId, color, fen, turn);
 
   const [moveFrom, setMoveFrom] = useState<Square | "">("");
   const [optionsToMove, setOptionsToMove] = useState<
     Record<string, React.CSSProperties>
   >({});
 
-  useEffect(() => {
-    console.log("BOARD FEN CHANGED", fen);
-  }, [fen]);
+  // useEffect(() => {
+  //   // console.log("BOARD FEN CHANGED", fen);
+  // }, [fen]);
 
-  useEffect(() => {
-    console.log("BOARD COLOR CHANGED", color);
-  }, [color]);
+  // useEffect(() => {
+  //   // console.log("BOARD COLOR CHANGED", color);
+  // }, [color]);
 
   const onDrop = ({ sourceSquare, targetSquare }: PieceDropHandlerArgs) => {
     if (!targetSquare || !gameId) return false;
@@ -174,13 +173,23 @@ const Board = () => {
   };
 
   return (
-    <div className="flex gap-6 items-start">
+    <div className="relative flex gap-6 items-start">
+      <GameOverModel />
+
       <div className="w-[500px]">
         <Chessboard options={chessOptions} />
       </div>
 
       <div className="w-[300px] flex flex-col gap-4">
-        <ShowClock />
+        <h1>
+          <span>white color</span>
+          <ShowClock color="w" />
+        </h1>
+
+        <h1>
+          <span>black color</span>
+          <ShowClock color="b" />
+        </h1>
         <ShowMovesTable pgn={pgn} />
       </div>
     </div>

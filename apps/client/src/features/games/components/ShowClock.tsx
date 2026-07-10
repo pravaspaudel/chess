@@ -9,38 +9,39 @@ function formatTime(milliseconds: number) {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
-export default function ShowClock() {
-  const turn = useChessStore((state) => state.turn);
-  const whiteTime = useChessStore((state) => state.whiteTime);
-  const blackTime = useChessStore((state) => state.blackTime);
-  const turnStartedAt = useChessStore((state) => state.turnStartedAt);
+export default function ShowClock({ color }: { color: "w" | "b" }) {
+  const { whiteTime, blackTime, turn, serverTime } = useChessStore();
 
-  console.log({
-    whiteTime: whiteTime,
-    blackTime: blackTime,
-  });
-
-  const [now, setNow] = useState(() => Date.now());
+  const [displayTime, setDisplayTime] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setNow(Date.now());
-    }, 100);
+    console.log("use effect in ShowClock.tsx just ran");
+    const updateClock = () => {
+      const elapsedTime = Date.now() - serverTime;
 
-    return () => clearInterval(timer);
-  }, []);
+      let currentWhite = whiteTime;
+      let currentBlack = blackTime;
 
-  const elapsed = turnStartedAt > 0 ? now - turnStartedAt : 0;
+      if (turn === "w") {
+        currentWhite = Math.max(0, whiteTime - elapsedTime);
+      } else {
+        currentBlack = Math.max(0, blackTime - elapsedTime);
+      }
 
-  const whiteDisplay = turn === "w" ? whiteTime - elapsed : whiteTime;
+      setDisplayTime(color === "w" ? currentWhite : currentBlack);
+    };
 
-  const blackDisplay = turn === "b" ? blackTime - elapsed : blackTime;
+    updateClock();
+
+    //for displaying the ime
+    const interval = setInterval(updateClock, 100);
+
+    return () => clearInterval(interval);
+  }, [whiteTime, blackTime, turn, serverTime, color]);
 
   return (
     <div>
-      <div>White: {formatTime(Math.max(0, whiteDisplay))}</div>
-
-      <div>Black: {formatTime(Math.max(0, blackDisplay))}</div>
+      <h1>{formatTime(displayTime)}</h1>
     </div>
   );
 }

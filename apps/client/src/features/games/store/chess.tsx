@@ -9,9 +9,14 @@ type ChessStore = {
   whiteTime: number;
   blackTime: number;
   turn: "w" | "b";
-  turnStartedAt: number;
+  // turnStartedAt: number;
+  serverTime: number;
+  gameOver: boolean;
+  winner: "w" | "b" | "draw" | null;
 
-  setTurnStartedAt: (turnStartedAt: number) => void;
+  // setTurnStartedAt: (turnStartedAt: number) => void;
+  setGameOver: (winner: "w" | "b" | "draw") => void;
+  setServerTime: (sTime: number) => void;
   setTurn: (turn: "w" | "b") => void;
   setWhiteTime: (time: number) => void;
   setBlackTime: (time: number) => void;
@@ -20,6 +25,8 @@ type ChessStore = {
   setColor: (color: "w" | "b") => void;
   setGameId: (id: string) => void;
   movepiece: (move: string) => void;
+
+  resetGame: () => void;
 };
 // {
 //   "type": "move",
@@ -36,9 +43,14 @@ const useChessStore = create<ChessStore>((set, get) => ({
   turn: "w",
   whiteTime: 18000,
   blackTime: 18000,
-  turnStartedAt: Date.now(),
+  serverTime: 0,
+  gameOver: false,
+  winner: null,
+  // turnStartedAt: Date.now(),
 
-  setTurnStartedAt: (startedAt: number) => set({ turnStartedAt: startedAt }),
+  setGameOver: (winner: "w" | "b" | "draw") =>
+    set({ gameOver: true, winner: winner }),
+  // setTurnStartedAt: (startedAt: number) => set({ turnStartedAt: startedAt }),
   setTurn: (turn: "w" | "b") => set({ turn: turn }),
   setGameId: (id) => set({ gameId: id }),
   setColor: (color) => set({ color: color }),
@@ -46,6 +58,7 @@ const useChessStore = create<ChessStore>((set, get) => ({
   setFen: (fen) => set({ fen: fen }),
   setWhiteTime: (whiteTime) => set({ whiteTime: whiteTime }),
   setBlackTime: (blackTime) => set({ blackTime: blackTime }),
+  setServerTime: (sTime: number) => set({ serverTime: sTime }),
 
   movepiece: (move: string) => {
     const socket = useSocketStore.getState().socket;
@@ -70,6 +83,18 @@ const useChessStore = create<ChessStore>((set, get) => ({
       }),
     );
   },
+
+  resetGame: () =>
+    set({
+      fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      pgn: "",
+      turn: "w",
+      whiteTime: 180000,
+      blackTime: 180000,
+      gameOver: false,
+      winner: null,
+      serverTime: Date.now(),
+    }),
 }));
 
 export default useChessStore;
