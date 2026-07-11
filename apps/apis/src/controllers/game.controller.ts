@@ -18,8 +18,6 @@ const getSingleGameController = asyncHandler(
 
     const game = await getGameByIdService(gameId);
 
-    console.log("THINK GOT THE GAME", game);
-
     return res.json(
       createSuccessResponse(200, "got game", {
         game,

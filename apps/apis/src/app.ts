@@ -7,6 +7,7 @@ import cors from "cors";
 import { config } from "./config/env.config";
 import gameRouter from "./routes/game.route";
 import requestLogger from "./logger/request.logger";
+import friendRouter from "./routes/friends.route";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use(express.json());
 app.use("/api/v1/", authRouter);
 app.use("/api/v1/", userRouter);
 app.use("/api/v1/", gameRouter);
+app.use("/api/v1/", friendRouter);
 
 //error handler
 app.use(errorMiddleware);
