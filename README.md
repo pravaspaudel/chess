@@ -1,159 +1,76 @@
-# Turborepo starter
+# Real-Time Multiplayer Chess Application
 
-This Turborepo starter is maintained by the Turborepo core team.
+A full-stack **real-time multiplayer chess application** built using **React.js, Tailwind CSS, Express.js, WebSockets, PostgreSQL, Redis, Drizzle ORM, and Turborepo**.
 
-## Using this example
+The application enables players to play live chess matches with real-time synchronization, persistent game storage, and scalable backend architecture. The frontend, backend, WebSocket server, and shared packages are organized using a Turborepo monorepo structure.
 
-Run the following command:
+## Features
 
-```sh
-npx create-turbo@latest
+- ️ Real-time multiplayer chess gameplay
+-  Real-time game state updates between connected players
+- ️ Chess clock management with real-time timers
+- ️ Persistent game and user data storage using PostgreSQL
+-  Redis-based local game state management for fast access
+-  Shared packages using Turborepo monorepo architecture
+-  User and friendship management system
+-  Chess move support 
+
+---
+# Tech Stack
+
+Frontend: React.js, TailwindCss
+Backend: Express.js, WebSockets
+Database : PostgresSQL, drizzle as ORM
+
+Redis is used for storing temporary local game state for active matches.
+
+# Folder Structure
+
+```text
+├── .turbo/
+├── apps/
+│   ├── apis/                  # Express.js backend API service
+│   ├── client/                # React.js frontend application
+│   └── ws/                    # WebSocket server for real-time communication
+├── node_modules/
+├── packages/
+│   ├── chess-utils/           # Shared chess logic and utilities
+│   ├── database/              # Drizzle ORM schema and PostgreSQL setup
+│   ├── eslint-config/         # Shared ESLint configuration
+│   ├── redis/                 # Redis client and game state utilities
+│   ├── typescript-config/     # Shared TypeScript configuration
+│   └── ui/                    # Shared UI components
+├── .gitignore
+├── .npmrc
+├── package.json
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── README.md
+└── turbo.json
 ```
 
-## What's inside?
+# Architecture Overview
 
-This Turborepo includes the following packages/apps:
+The application follows a monorepo architecture using Turborepo.
 
-### Apps and Packages
+- React client handles the user interface and chess interactions.
+- Express API handles REST-based backend operations.
+- WebSocket server manages real-time multiplayer communication.
+- Redis stores active game states for fast access.
+- PostgreSQL stores permanent data such as users, games, and moves.
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+# Redis Game State Management
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+Redis is used for storing temporary game state for active matches.
 
-### Utilities
+Stored information:
 
-This Turborepo has some additional tools already setup for you:
+- Current board position (FEN)
+- Player information
+- Current turn
+- Remaining chess clock time
+- Game status
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+Redis allows fast updates during gameplay without continuously querying PostgreSQL.
 
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo build
-pnpm dlx turbo build
-pnpm exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+After the game finishes, the final game state and move history are stored permanently in PostgreSQL.
